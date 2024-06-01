@@ -1,5 +1,5 @@
-# NeilLinehanPortfolio
-Here is a collection of coding projects I have worked on over the years either during my education, small projects for work, or otherwise. 
+# Neil Linehan Portfolio
+Here is a collection of coding projects I have worked on over the years, either during my education, for small work projects, or otherwise. I have uploaded various projects that tackle repetitive tasks, model physical phenomena, or perform data science analysis.
 
 # Links to notebooks with summaries:
 ## [DTL interpolation toolkit](https://github.com/neillinehan/NeilLinehanPortfolio/blob/main/dtl_data_interpolation_toolkit.ipynb):
@@ -7,3 +7,6 @@ At work, I frequently need to transfer data into a spreadsheet. This compact col
 
 ## [Omaha Food Network Traffic Flows](https://github.com/neillinehan/NeilLinehanPortfolio/blob/main/omaha_food_county_network.ipynb):
 In this project, I investigated available commodity transport data available from the Bureau of Transportation Statistics and the U.S. Department of Transportation to determine where my city, Omaha Nebraska, gets its food from. Using the data and all open-source libraries, I generated a traffic flow map showing most likely paths taken by trucks transporting foodstuffs to the Omaha region. Although other research has been done using the available data to generate food flow maps between regions and counties, none to my knowledge have used the data to generate traffic flow maps. To plot the road networks the first step was to convert the FAF5 model network geodatabase into a graph with a format recognized by the OSMnx library. After this conversion, I then converted the generated graph into a shapefile to be used in other notebooks. I then used Networkx to find the nearest node to a representative point with the CFS area polygons. I found the shortest path between the node of the destination records and the node for the Omaha region using OSMnx. After creating the routes, I also estimated the emissions to bring the food to Omaha.
+
+## [Timeseries Rolling Correlation Plot](https://github.com/neillinehan/NeilLinehanPortfolio/blob/main/rolling_correlation.ipynb)
+This code was developed during my time as a Research Assistant at UNL. The goal was to visualize relationships between time-series signals, particularly how crop light signatures might change in relation to each other throughout a growing season. I created a function to display colored rectangles behind time-series plots, indicating the correlation strength between two variables at a chosen window size. The function takes a pandas DataFrame with a datetime index, calculates the rolling correlation, and uses these values to color-code the plot, offering an intuitive visualization of how the relationship between the two variables evolves. The accompanying notebook includes a demonstration with sample data, making it easy for others to adapt and use for their own time-series analysis.
