@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xml:lang="en">
+	<Esri>
+		<CreaDate>20260302</CreaDate>
+		<CreaTime>16360200</CreaTime>
+		<ArcGISFormat>1.0</ArcGISFormat>
+		<SyncOnce>TRUE</SyncOnce>
+		<DataProperties>
+			<itemProps/></DataProperties>
+	</Esri>
+	<mdChar>
+		<CharSetCd value="004">
+		</CharSetCd>
+	</mdChar>
+	<mdHrLv>
+		<ScopeCd value="005">
+		</ScopeCd>
+	</mdHrLv>
+	<mdContact>
+		<rpOrgName>U.S. Department of Commerce, U.S. Census Bureau, Geography Division</rpOrgName>
+		<rpCntInfo>
+			<cntPhone>
+				<voiceNum>301-763-1128</voiceNum>
+			</cntPhone>
+			<cntAddress addressType="both">
+				<delPoint>4600 Silver Hill Road, Stop 7400</delPoint>
+				<city>Washington</city>
+				<adminArea>DC</adminArea>
+				<postCode>20233</postCode>
+				<country>United States</country>
+				<eMailAdd>geo.geography@census.gov</eMailAdd>
+			</cntAddress>
+		</rpCntInfo>
+		<role>
+			<RoleCd value="007">
+			</RoleCd>
+		</role>
+	</mdContact>
+	<mdDateSt>2025-10-06</mdDateSt>
+	<distInfo>
+		<distributor>
+			<distorCont>
+				<rpOrgName>Bureau of Transportation Statistics</rpOrgName>
+				<rpPosName>NTAD Program Manager</rpPosName>
+				<rpCntInfo>
+					<cntPhone>
+						<voiceNum>none</voiceNum>
+					</cntPhone>
+					<cntAddress addressType="both">
+						<delPoint>1200 New Jersey Ave. SE</delPoint>
+						<city>Washington</city>
+						<adminArea>DC</adminArea>
+						<postCode>20590</postCode>
+						<country>US</country>
+						<eMailAdd>ntad@dot.gov</eMailAdd>
+					</cntAddress>
+				</rpCntInfo>
+				<role>
+					<RoleCd value="005">
+					</RoleCd>
+				</role>
+			</distorCont>
+			<distorOrdPrc>
+				<resFees>None. No fees are applicable for obtaining the dataset.</resFees>
+			</distorOrdPrc>
+			<distorFormat>
+				<formatName>Open Data Catalog</formatName>
+				<formatVer>1.0</formatVer>
+				<formatSpec>Hosted Downloads</formatSpec>
+				<formatInfo>Web page to view and download dataset. The file download formats available include: ESRI File Geodatabase, Shapefile, GeoPackage, Comma-Seperated Values (CSV), Microsoft Excel, GeoJSON, KML, Feature Collection, and SQLite Geodatabase.</formatInfo>
+				<fileDecmTech>ZIP</fileDecmTech>
+			</distorFormat>
+			<distorTran>
+				<onLineSrc>
+					<linkage>https://doi.org/10.21949/1522034</linkage>
+				</onLineSrc>
+			</distorTran>
+		</distributor>
+		<distributor>
+			<distorCont>
+				<rpOrgName>Bureau of Transportation Statistics</rpOrgName>
+				<rpPosName>NTAD Program Manager</rpPosName>
+				<rpCntInfo>
+					<cntPhone>
+						<voiceNum>none</voiceNum>
+					</cntPhone>
+					<cntAddress addressType="both">
+						<delPoint>1200 New Jersey Ave. SE</delPoint>
+						<city>Washington</city>
+						<adminArea>DC</adminArea>
+						<postCode>20590</postCode>
+						<country>US</country>
+						<eMailAdd>ntad@dot.gov</eMailAdd>
+					</cntAddress>
+				</rpCntInfo>
+				<role>
+					<RoleCd value="005">
+					</RoleCd>
+				</role>
+			</distorCont>
+			<distorOrdPrc>
+				<resFees>None. No fees are applicable for obtaining the dataset.</resFees>
+			</distorOrdPrc>
+			<distorFormat>
+				<formatName>ArcGIS REST Services Directory Feature Server (WFS)</formatName>
+				<formatVer>11.5</formatVer>
+				<formatSpec>https://ienccloud.us/arcgis/sdk/rest/index.html#/Feature_Service/02ss0000007v000000/</formatSpec>
+				<formatInfo>complies with OGC WFS Map Service for visualizing geospatial information</formatInfo>
+			</distorFormat>
+			<distorTran>
+				<onLineSrc>
+					<linkage>https://doi.org/10.21949/1522036</linkage>
+				</onLineSrc>
+			</distorTran>
+		</distributor>
+		<distributor>
+			<distorCont>
+				<rpOrgName>Bureau of Transportation Statistics</rpOrgName>
+				<rpPosName>NTAD Program Manager</rpPosName>
+				<rpCntInfo>
+					<cntPhone>
+						<voiceNum>none</voiceNum>
+					</cntPhone>
+					<cntAddress addressType="both">
+						<delPoint>1200 New Jersey Ave. SE</delPoint>
+						<city>Washington</city>
+						<adminArea>DC</adminArea>
+						<postCode>20590</postCode>
+						<country>US</country>
+						<eMailAdd>ntad@dot.gov</eMailAdd>
+					</cntAddress>
+				</rpCntInfo>
+				<role>
+					<RoleCd value="005">
+					</RoleCd>
+				</role>
+			</distorCont>
+			<distorOrdPrc>
+				<resFees>None. No fees are applicable for obtaining the dataset.</resFees>
+			</distorOrdPrc>
+			<distorFormat>
+				<formatName>ArcGIS Online Hosted Vector Tile Service</formatName>
+				<formatVer>June 2025</formatVer>
+				<formatSpec>https://developers.arcgis.com/documentation/portal-and-data-services/data-services/vector-tile-services/introduction/</formatSpec>
+				<formatInfo>ArcGIS Online Hosted Esri ArcGIS Vector Tile Service for visualizing geospatial information</formatInfo>
+			</distorFormat>
+			<distorTran>
+				<onLineSrc>
+					<linkage>https://doi.org/10.21949/1522037</linkage>
+				</onLineSrc>
+			</distorTran>
+		</distributor>
+	</distInfo>
+	<dataIdInfo>
+		<idCitation>
+			<resTitle>Core Based Statistical Areas</resTitle>
+			<date>
+				<createDate>2008-07-01</createDate>
+				<lastUpdateDate>2024-09-25</lastUpdateDate>
+			</date>
+			<citRespParty>
+				<rpOrgName>U.S. Department of Commerce, U.S. Census Bureau, Geography Division</rpOrgName>
+				<role>
+					<RoleCd value="006">
+					</RoleCd>
+				</role>
+			</citRespParty>
+			<presForm>
+				<PresFormCd value="">
+				</PresFormCd>
+			</presForm>
+			<presForm>
+				<fgdcGeoform>vector digital data</fgdcGeoform>
+			</presForm>
+			<collTitle>National Transportation Atlas Database</collTitle>
+		</idCitation>
+		<idAbs>&lt;p&gt;The Core Based Statistical Areas dataset was updated on September 25, 2024 from the U.S. Department of Commerce, U.S. Census Bureau, Geography Division and is part of the U.S. Department of Transportation (USDOT)/Bureau of Transportation Statistics (BTS) National Transportation Atlas Database (NTAD). This resource is a member of a series. The TIGER/Line shapefiles and related database files (.dbf) are an extract of selected geographic and cartographic information from the U.S. Census Bureau's Master Address File / Topologically Integrated Geographic Encoding and Referencing (MAF/TIGER) System (MTS). The MTS represents a seamless national file with no overlaps or gaps between parts, however, each TIGER/Line shapefile is designed to stand alone as an independent data set, or they can be combined to cover the entire nation. Metropolitan and Micropolitan Statistical Areas are together termed Core Based Statistical Areas (CBSAs) and are defined by the Office of Management and Budget (OMB) and consist of the county or counties or equivalent entities associated with at least one urban core of at least 10,000 population, plus adjacent counties having a high degree of social and economic integration with the core as measured through commuting ties with the counties containing the core. Categories of CBSAs are: Metropolitan Statistical Areas, based on urban areas of 50,000 or more population; and Micropolitan Statistical Areas, based on urban areas of at least 10,000 population but less than 50,000 population. The CBSA boundaries are those defined by OMB based on the 2020 Census and published in 2023. A data dictionary, or other source of attribute information, is accessible at https://doi.org/10.21949/1529014&lt;/p&gt;</idAbs>
+		<idPurp>The Census Bureau releases extracts of the MAF/TIGER database in the form of TIGER/Line Shapefiles for others to use in geographic information systems (GIS) or for other geographic applications.</idPurp>
+		<idCredit>Acknowledgment of the U.S. Department of Commerce, U.S. Census Bureau, Geography Division, and the Bureau of Transportation Statistics (BTS) [distributor].</idCredit>
+		<idStatus>
+			<ProgCd value="004">
+			</ProgCd>
+		</idStatus>
+		<idPoC>
+			<rpOrgName>U.S. Department of Commerce, U.S. Census Bureau, Geography Division</rpOrgName>
+			<rpCntInfo>
+				<cntPhone>
+					<voiceNum>301-763-1128</voiceNum>
+				</cntPhone>
+				<cntAddress addressType="both">
+					<delPoint>4600 Silver Hill Road, Stop 7400</delPoint>
+					<city>Washington</city>
+					<adminArea>DC</adminArea>
+					<postCode>20233</postCode>
+					<country>United States</country>
+					<eMailAdd>geo.geography@census.gov</eMailAdd>
+				</cntAddress>
+			</rpCntInfo>
+			<role>
+				<RoleCd value="007">
+				</RoleCd>
+			</role>
+		</idPoC>
+		<resMaint>
+			<maintFreq>
+				<MaintFreqCd value="011">
+				</MaintFreqCd>
+			</maintFreq>
+		</resMaint>
+		<placeKeys>
+			<keyword>USA</keyword>
+			<keyword>National</keyword>
+			<keyword>U.S.</keyword>
+			<keyword>United States</keyword>
+		</placeKeys>
+		<themeKeys>
+			<keyword>society</keyword>
+			<thesaName>
+				<resTitle>ISO 19115 Topic Category</resTitle>
+			</thesaName>
+		</themeKeys>
+		<themeKeys>
+			<keyword>NTAD</keyword>
+			<keyword>National Transportation Atlas Database</keyword>
+			<keyword>Transportation</keyword>
+			<keyword>Atlas</keyword>
+			<keyword>Database</keyword>
+			<keyword>vector</keyword>
+			<keyword>polygon</keyword>
+			<keyword>Nation</keyword>
+			<keyword>Planning</keyword>
+			<keyword>Boundary</keyword>
+			<keyword>Boundaries</keyword>
+			<keyword>Core</keyword>
+			<keyword>Based</keyword>
+			<keyword>Statistical</keyword>
+			<keyword>Area</keyword>
+			<keyword>CBSA</keyword>
+			<keyword>Metropolitan</keyword>
+			<keyword>Metropolitan Statistical Areas</keyword>
+			<keyword>MSA</keyword>
+			<keyword>Micropolitan</keyword>
+			<keyword>Micropolitan Statistical Area</keyword>
+		</themeKeys>
+		<searchKeys>
+			<keyword>society</keyword>
+			<keyword>USA</keyword>
+			<keyword>National</keyword>
+			<keyword>U.S.</keyword>
+			<keyword>United States</keyword>
+			<keyword>NTAD</keyword>
+			<keyword>National Transportation Atlas Database</keyword>
+			<keyword>Transportation</keyword>
+			<keyword>Atlas</keyword>
+			<keyword>Database</keyword>
+			<keyword>vector</keyword>
+			<keyword>polygon</keyword>
+			<keyword>Nation</keyword>
+			<keyword>Planning</keyword>
+			<keyword>Boundary</keyword>
+			<keyword>Boundaries</keyword>
+			<keyword>Core</keyword>
+			<keyword>Based</keyword>
+			<keyword>Statistical</keyword>
+			<keyword>Area</keyword>
+			<keyword>CBSA</keyword>
+			<keyword>Metropolitan</keyword>
+			<keyword>Metropolitan Statistical Areas</keyword>
+			<keyword>MSA</keyword>
+			<keyword>Micropolitan</keyword>
+			<keyword>Micropolitan Statistical Area</keyword>
+		</searchKeys>
+		<resConst>
+			<Consts>
+				<useLimit>The TIGER/Line Shapefile products are not copyrighted however TIGER/Line and Census TIGER are registered trademarks of the U.S. Census Bureau. These products are free to use in a product or publication, however acknowledgement must be given to the U.S. Census Bureau as the source. The boundary information in the TIGER/Line Shapefiles are for statistical data collection and tabulation purposes only; their depiction and designation for statistical purposes does not constitute a determination of jurisdictional authority or rights of ownership or entitlement and they are not legal land descriptions. Coordinates in the TIGER/Line shapefiles have six implied decimal places, but the positional accuracy of these coordinates is not as great as the six decimal places suggest.</useLimit>
+			</Consts>
+		</resConst>
+		<resConst>
+			<Consts>
+				<useLimit>The TIGER/Line Shapefile products are not copyrighted however TIGER/Line and Census TIGER are registered trademarks of the U.S. Census Bureau. These products are free to use in a product or publication, however acknowledgement must be given to the U.S. Census Bureau as the source. The boundary information in the TIGER/Line Shapefiles are for statistical data collection and tabulation purposes only; their depiction and designation for statistical purposes does not constitute a determination of jurisdictional authority or rights of ownership or entitlement and they are not legal land descriptions. Coordinates in the TIGER/Line shapefiles have six implied decimal places, but the positional accuracy of these coordinates is not as great as the six decimal places suggest.</useLimit>
+			</Consts>
+			<LegConsts>
+				<accessConsts>
+					<RestrictCd value="004">
+					</RestrictCd>
+				</accessConsts>
+			</LegConsts>
+		</resConst>
+		<aggrInfo>
+			<aggrDSName>
+				<resTitle>National Transportation Atlas Database</resTitle>
+				<date>
+					<pubDate>2024-09-25</pubDate>
+				</date>
+				<citRespParty>
+					<rpOrgName>Bureau of Transportation Statistics</rpOrgName>
+					<role>
+						<RoleCd value="006">
+						</RoleCd>
+					</role>
+				</citRespParty>
+			</aggrDSName>
+			<assocType>
+				<AscTypeCd value="002">
+				</AscTypeCd>
+			</assocType>
+		</aggrInfo>
+		<tpCat>
+			<TopicCatCd value="016">
+			</TopicCatCd>
+		</tpCat>
+		<dataExt>
+			<tempEle>
+				<TempExtent>
+					<exTemp>
+						<TM_Instant>
+							<tmPosition>2024-01-01</tmPosition>
+						</TM_Instant>
+					</exTemp>
+				</TempExtent>
+			</tempEle>
+		</dataExt>
+		<envirDesc>Version 6.2 (Build 9200) ; Esri ArcGIS 10.8.1.14362</envirDesc>
+	</dataIdInfo>
+	<mdMaint>
+		<resMaint>
+			<maintFreq>
+				<MaintFreqCd value="011">
+				</MaintFreqCd>
+			</maintFreq>
+		</resMaint>
+	</mdMaint>
+	<mdMaint>
+		<maintFreq>
+			<MaintFreqCd value="009">
+			</MaintFreqCd>
+		</maintFreq>
+	</mdMaint>
+	<dqInfo>
+		<dqScope>
+			<scpLvl>
+				<ScopeCd value="005">
+				</ScopeCd>
+			</scpLvl>
+		</dqScope>
+		<report type="DQCompOm">
+			<measDesc>Data set is considered complete for the information presented, as described in the abstract. Users are advised to read the rest of the metadata record carefully for additional details.</measDesc>
+		</report>
+		<dataLineage>
+			<prcStep>
+				<stepDesc>TIGER/Line Shapefiles are extracted from the Census MAF/TIGER database by nation, state, county, and entity. Census MAF/TIGER data for all of the aforementioned geographic entities are then distributed among the shapefiles each containing attributes for line, polygon, or landmark geographic data.</stepDesc>
+			</prcStep>
+		</dataLineage>
+	</dqInfo>
+	<refSysInfo>
+		<RefSystem>
+			<refSysID>
+				<identCode>3857</identCode>
+				<identAuth>EPSG</identAuth>
+			</refSysID>
+		</RefSystem>
+	</refSysInfo>
+	<eainfo>
+		<overview>
+			<eadetcit>A data dictionary resource of attribute information is accessible at https://doi.org/10.21949/1529014</eadetcit>
+		</overview>
+	</eainfo>
+</metadata>
