@@ -2,6 +2,9 @@
 Here is a collection of coding projects I have worked on over the years, either during my education, for small work projects, or otherwise. I have uploaded various projects that tackle repetitive tasks, model physical phenomena, or perform data science analysis.
 
 # Links to notebooks with summaries:
+## [Which workers will benefit from closing the Productivity Pay Gap?](https://github.com/neillinehan/NeilLinehanPortfolio/blob/main/productivity-pay-gap/productivity_pay_gap.ipynb)
+Code behind my article [Which workers will benefit from closing the Productivity Pay Gap?](https://neillinehan.substack.com/p/which-workers-will-benefit-from-closing). It rebuilds EPI's productivity-pay gap in dollars per hour, ties the S&P 500 to profits capitalized at the interest rate, projects the market under three gap scenarios, and finds the breakeven saving rate by age at which workers prefer faster wage growth over a faster-growing market. Data is pulled live from FRED, EPI and Shiller; needs a free FRED API key.
+
 ## [DTL interpolation toolkit](https://github.com/neillinehan/NeilLinehanPortfolio/blob/main/dtl_data_interpolation_toolkit.ipynb):
 At work, I frequently need to transfer data into a spreadsheet. This compact collection of functions enables the user to input data from various years, often with gaps, and returns it in a format that can be easily copied and pasted directly into a spreadsheet with years as columns. It’s a tool designed to optimize a specific repetitive task. Additionally, it includes a simple polynomial regression using sklearn to fit the reported data. This feature allows the user to obtain a Google Sheets or Excel-ready cell formula to calculate the missing years directly in the cell.
 
