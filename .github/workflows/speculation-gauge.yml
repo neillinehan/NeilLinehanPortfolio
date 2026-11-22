@@ -1,0 +1,61 @@
+name: Speculation gauge
+
+# Recomputes the gauge's data every weekday and publishes the repository
+# (including speculation-gauge/) to GitHub Pages.
+on:
+  schedule:
+    - cron: '23 18 * * 1-5'   # 18:23 UTC = 1:23 p.m. US Eastern (standard time)
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install packages
+        run: pip install pandas requests yfinance
+
+      - name: Compute the gauge
+        run: python speculation-gauge/compute.py speculation-gauge/data.json
+
+      - name: Check the result
+        run: |
+          python - <<'EOF'
+          import datetime
+          import json
+          data = json.load(open('speculation-gauge/data.json'))['data']
+          last = datetime.date.fromisoformat(data[-1][0])
+          assert len(data) >= 10000, f'only {len(data)} rows'
+          assert (datetime.date.today() - last).days <= 7, f'data ends {last}'
+          print(f'{len(data)} rows through {last}')
+          EOF
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

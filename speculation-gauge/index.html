@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US Stock Speculation Gauge</title>
+<meta name="description" content="How much of the value of US company stock is speculation: stock value compared with the value of the cash companies pay their shareholders, updated every weekday.">
+<style>
+  :root {
+    --color-fg: #1b1b19; --color-fg-muted: #5b5a55; --color-bg: #ffffff; --color-panel: #f4f4f1;
+    --color-border-line: #dcdbd5; --color-ok: #1a7f37; --color-warn: #9a6700; --color-bad: #b42318;
+    --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-anthropic-serif: Georgia, "Times New Roman", serif;
+    --cds-font-size-caption: 13px; --cds-font-size-body: 15px; --cds-font-size-heading: 19px; --cds-font-size-title: 28px;
+    --cds-font-weight-medium: 600;
+    --cds-chart-grid: #ecebe6; --cds-chart-axis: #c9c8c1; --cds-text-secondary: #5b5a55;
+    --cds-surface-popover: #ffffff; --cds-border: #dcdbd5; --cds-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.12);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-fg: #f0efea; --color-fg-muted: #b9b7af; --color-bg: #161615; --color-panel: #22221f;
+      --color-border-line: #3a3935; --color-ok: #4ac26b; --color-warn: #d4a72c; --color-bad: #f47067;
+      --cds-chart-grid: #2c2b28; --cds-chart-axis: #4a4944; --cds-text-secondary: #b9b7af;
+      --cds-surface-popover: #22221f; --cds-border: #3a3935; --cds-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.5);
+      color-scheme: dark;
+    }
+  }
+  html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
+  body { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); line-height: 1.5; }
+  #dash-root { max-width: 72rem; margin: 0 auto; padding: 32px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); }
+  .dash-skeleton { color: transparent !important; background: var(--color-panel); border-radius: 4px; }
+  .sg-chart.dash-skeleton { min-height: 264px; }
+  .sg-site-foot { max-width: 72rem; margin: 0 auto; padding: 0 16px 48px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .sg-site-foot a { color: inherit; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+  // A small stand-in for the dashboard runtime: loads data.json and runs the page's drawings.
+  (function () {
+    const calcs = {}, draws = {}, onDatas = [], loaders = {};
+    let raw = null, rows = null, status = 'loading';
+    window.dash = {
+      colors: ['#2a78d6', '#eb6834', '#1baf7a'],
+      data(id) {
+        if (id === 'daily') {
+          if (status !== 'ok') return {status, data: []};
+          if (!rows) rows = loaders.daily ? loaders.daily.fn({answer: raw}).data : raw;
+          return {status: 'ok', data: rows};
+        }
+        const c = calcs[id];
+        if (!c) return {status: 'missing', data: []};
+        if (status !== 'ok') return {status, data: null};
+        if (!c.cache) c.cache = c.fn(...c.inputs.map((i) => window.dash.data(i).data));
+        return {status: 'ok', data: c.cache};
+      },
+      calc(id, spec) { calcs[id] = spec; },
+      loader(id, spec) { loaders[id] = spec; },
+      draw(name, fn) { if (fn) { draws[name] = fn; return; } run(name); },
+      onData(fn) { onDatas.push(fn); },
+      params() { return {}; }, setParams() {}, resetParams() {}, setLink() {}, refresh() {},
+    };
+    function run(name) {
+      for (const el of document.querySelectorAll(`[data-draw="${name}"]`)) {
+        try { draws[name](el); } catch (e) { console.error(e); }
+      }
+    }
+    function all() { onDatas.forEach((f) => f()); Object.keys(draws).forEach(run); }
+    window.addEventListener('DOMContentLoaded', () => {
+      all();
+      fetch('data.json', {cache: 'no-cache'})
+        .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((j) => { raw = j; status = 'ok'; all(); })
+        .catch(() => { status = 'error'; all(); });
+    });
+    let width = window.innerWidth;
+    window.addEventListener('resize', () => {
+      if (Math.abs(window.innerWidth - width) < 8) return;
+      width = window.innerWidth;
+      ['price-chart', 'times-chart'].forEach(run);
+    });
+  })();
+</script>
+</head>
+<body>
+<div id="dash-root">
+<style>
+  /* Spacing uses an 8px grid: 8, 16, 24, 32, 48. */
+  .sg { display: flex; flex-direction: column; gap: 32px; max-width: 72rem; }
+  .sg-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .sg-head { display: flex; flex-direction: column; gap: 16px; }
+  .sg-head h1 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.25; text-wrap: balance; }
+  .sg-answer { margin: 0; font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); line-height: 1.5; max-width: 40rem; text-wrap: pretty; }
+  .sg-answer b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sg-status-line { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .sg-status { display: inline-flex; align-items: center; gap: 8px; }
+  .sg-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--color-ok); flex: none; }
+  .sg-status.is-loading::before { background: var(--color-warn); }
+  .sg-status.is-error::before { background: var(--color-bad); }
+  .sg-nav ul { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; padding: 0; list-style: none; }
+  .sg-nav a { display: inline-flex; align-items: center; min-height: 48px; color: var(--color-fg); text-decoration: underline; text-underline-offset: 3px; }
+  .sg-nav a:hover { text-decoration-thickness: 2px; }
+  .sg-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 16px; }
+  .sg-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .sg-tile h3 { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+  .sg-big { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .sg-tile p { margin: 0; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); line-height: 1.5; }
+  .sg-section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .sg-section h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); text-wrap: balance; }
+  .sg-section h3 { margin: 16px 0 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .sg-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .sg-controls .sg-label { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .sg-range { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--color-border-line); border-radius: 8px; overflow: hidden; }
+  .sg-range button { font: inherit; font-size: var(--cds-font-size-body); min-height: 48px; min-width: 48px; padding: 0 16px; background: var(--color-bg); color: var(--color-fg); border: 0; cursor: pointer; }
+  .sg-range button + button { border-left: 1px solid var(--color-border-line); }
+  .sg-range button:hover { background: var(--color-panel); }
+  .sg-range button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); font-weight: var(--cds-font-weight-medium); }
+  .sg a:focus-visible, .sg button:focus-visible, .sg summary:focus-visible, .sg-chart:focus-visible { outline: 3px solid var(--color-fg); outline-offset: 2px; }
+  .sg-hint { margin: 0; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); max-width: 40rem; line-height: 1.5; }
+  .sg-chart { position: relative; width: 100%; min-height: 264px; touch-action: pan-y; -webkit-user-select: none; user-select: none; border-radius: 8px; }
+  .sg-chart svg { display: block; overflow: visible; }
+  .sg-chart .tick text, .sg-chart .sg-note { fill: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); }
+  .sg-chart .sg-end { fill: var(--color-fg); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+  .sg-chart .domain { stroke: var(--cds-chart-axis); }
+  .sg-chart .tick line { stroke: var(--cds-chart-grid); }
+  .sg-fail { color: var(--color-fg); font-size: var(--cds-font-size-body); padding: 24px 0; margin: 0; }
+  .sg-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: 8px; padding: 8px 16px; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 2; color: var(--color-fg); }
+  .sg-tip strong { display: block; margin-bottom: 8px; font-weight: var(--cds-font-weight-medium); }
+  .sg-tip div { display: flex; justify-content: space-between; gap: 16px; }
+  .sg-more { display: flex; flex-direction: column; }
+  .sg-more details { border-top: 1px solid var(--color-border-line); }
+  .sg-more details:last-child { border-bottom: 1px solid var(--color-border-line); }
+  .sg-more summary { min-height: 48px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+  .sg-more summary:hover { text-decoration: underline; }
+  .sg-body { padding-bottom: 24px; color: var(--color-fg); line-height: 1.5; }
+  .sg-body > p, .sg-body > ul, .sg-body > ol { max-width: 40rem; margin: 16px 0 0; }
+  .sg-body li + li { margin-top: 8px; }
+  .sg-body a { color: inherit; text-decoration: underline; }
+  .sg-table-wrap { overflow-x: auto; max-width: 100%; margin-top: 16px; }
+  .sg-table { border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; min-width: 100%; }
+  .sg-table caption { text-align: left; padding-bottom: 8px; color: var(--color-fg-muted); }
+  .sg-table th, .sg-table td { padding: 8px 16px; border-bottom: 1px solid var(--color-border-line); text-align: right; white-space: nowrap; color: var(--color-fg); }
+  .sg-table th:first-child, .sg-table td:first-child { text-align: left; }
+  .sg-table th { font-weight: var(--cds-font-weight-medium); }
+  .sg-foot { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; line-height: 1.5; }
+</style>
+
+<main class="sg" data-read lang="en">
+  <header class="sg-head" id="answer">
+    <h1>How much of the value of US company stock is speculation?</h1>
+    <p class="sg-answer">On <b class="dash-skeleton" data-draw="date" data-source="latest" data-field="date" data-row="0">—</b>, all US company stock was worth <b class="dash-skeleton" data-draw="price" data-source="latest" data-field="price" data-row="0">—</b>. At current interest rates, the cash that companies pay their shareholders accounts for <b class="dash-skeleton" data-draw="cash" data-source="latest" data-field="cash_backed" data-row="0">—</b> of that. We call the other <b class="dash-skeleton" data-draw="spec" data-source="latest" data-field="speculation" data-row="0">—</b>, or <b class="dash-skeleton" data-draw="share" data-source="latest" data-field="speculation_share" data-row="0">—</b>% of the value, speculation.</p>
+    <p class="sg-answer">Speculation is a bigger part of the value now than on <b class="dash-skeleton" data-draw="rank" data-source="context" data-field="rank" data-row="0">—</b>% of trading days since <b class="dash-skeleton" data-draw="first_year" data-source="context" data-field="first_year" data-row="0">—</b>.</p>
+    <p class="sg-status-line" role="status"><span class="sg-status dash-skeleton" data-draw="status" data-source="daily">—</span></p>
+  </header>
+
+  <nav class="sg-nav" aria-label="On this page">
+    <ul>
+      <li><a href="#charts">Charts</a></li>
+      <li><a href="#table">Year by year</a></li>
+      <li><a href="#how">How we measure it</a></li>
+      <li><a href="#limits">What it can’t tell you</a></li>
+    </ul>
+  </nav>
+
+  <section class="sg-section" id="numbers" aria-labelledby="numbers-heading">
+    <h2 id="numbers-heading" class="sg-sr">Today's numbers</h2>
+    <div class="sg-tiles">
+      <div class="sg-tile" id="tile-price">
+        <h3>Stock value</h3>
+        <div class="sg-big"><span class="dash-skeleton" data-draw="price" data-source="latest" data-field="price" data-row="0">—</span></div>
+        <p>All US company stock, including privately held companies. That is why it is larger than the usual stock market figures.</p>
+      </div>
+      <div class="sg-tile" id="tile-cash">
+        <h3>Payout value</h3>
+        <div class="sg-big"><span class="dash-skeleton" data-draw="cash" data-source="latest" data-field="cash_backed" data-row="0">—</span></div>
+        <p>Lent at <span class="dash-skeleton" data-draw="rate" data-source="latest" data-field="rate" data-row="0">—</span>% a year, this sum would earn what companies paid shareholders over the past year.</p>
+      </div>
+      <div class="sg-tile" id="tile-spec">
+        <h3>Speculation</h3>
+        <div class="sg-big"><span class="dash-skeleton" data-draw="share" data-source="latest" data-field="speculation_share" data-row="0">—</span>%</div>
+        <p>Of the value. Stocks are worth <span class="dash-skeleton" data-draw="times" data-source="latest" data-field="times" data-row="0">—</span> times their payout value. The typical level since <span class="dash-skeleton" data-draw="first_year" data-source="context" data-field="first_year" data-row="0">—</span> is <span class="dash-skeleton" data-draw="median" data-source="context" data-field="median_share" data-row="0">—</span>%.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sg-section" id="charts" aria-labelledby="charts-heading">
+    <h2 id="charts-heading">Speculation over time</h2>
+    <div class="sg-controls">
+      <span class="sg-label" id="period-label">Years to show</span>
+      <div class="sg-range" role="group" aria-labelledby="period-label">
+        <button type="button" id="range-5" data-years="5" aria-pressed="false">Last 5</button>
+        <button type="button" id="range-10" data-years="10" aria-pressed="false">Last 10</button>
+        <button type="button" id="range-25" data-years="25" aria-pressed="true">Last 25</button>
+        <button type="button" id="range-all" data-years="0" aria-pressed="false">All</button>
+      </div>
+    </div>
+    <p class="sg-hint" id="chart-hint">To see the numbers for any day, tap, drag or point at a chart. With a keyboard, press Tab to reach a chart, then use the arrow keys.</p>
+
+    <h3 id="price-title">Stock value and payout value</h3>
+    <p class="sg-hint">All US company stock, in US dollars, <span class="dash-skeleton" data-draw="dates" data-source="daily">—</span>. The shaded gap between the lines is speculation.</p>
+    <div class="sg-controls">
+      <span class="sg-label" id="scale-label">Compare changes in</span>
+      <div class="sg-range sg-scale" role="group" aria-labelledby="scale-label">
+        <button type="button" id="scale-percent" data-scale="log" aria-pressed="true">Percent</button>
+        <button type="button" id="scale-even" data-scale="linear" aria-pressed="false">Dollars</button>
+      </div>
+    </div>
+    <p class="sg-hint"><span id="scale-help-log">A 10% rise looks the same size in every year, which makes early years easier to read.</span><span id="scale-help-linear" hidden>A $1 trillion rise looks the same size in every year, which squeezes early years near the bottom.</span></p>
+    <div class="sg-chart dash-skeleton" id="chart-price" tabindex="0" aria-describedby="chart-hint" data-draw="price-chart" data-source="daily"></div>
+
+    <h3 id="times-title">Stock value divided by payout value</h3>
+    <p class="sg-hint"><span class="dash-skeleton" data-draw="dates" data-source="daily">—</span>. At 1, the two are equal and there is no speculation. The dashed line shows the typical level across all years.</p>
+    <div class="sg-chart dash-skeleton" id="chart-times" tabindex="0" aria-describedby="chart-hint" data-draw="times-chart" data-source="daily context"></div>
+  </section>
+
+  <div class="sg-more">
+    <details id="table">
+      <summary>Year by year</summary>
+      <div class="sg-body">
+        <div class="sg-table-wrap">
+          <table class="sg-table" data-source="yearly" data-row-key="date">
+            <caption>The last trading day of each year, and the latest day. Amounts are in US dollars.</caption>
+            <thead>
+              <tr>
+                <th scope="col" data-field="date">Date</th>
+                <th scope="col" data-field="price">Stock value</th>
+                <th scope="col" data-field="cash_backed">Payout value</th>
+                <th scope="col" data-field="speculation">Speculation</th>
+                <th scope="col" data-field="speculation_share">Speculation, percent of value</th>
+                <th scope="col" data-field="times">Times payout value</th>
+              </tr>
+            </thead>
+            <tbody data-draw="yearly-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <details id="how">
+      <summary>How we measure it</summary>
+      <div class="sg-body">
+        <ol><li>We add up the cash US companies paid their shareholders over the past 12 months. That is dividends, plus what companies spent buying back their own shares, minus what they raised selling new shares. The figures for buybacks and new shares leave out banks and insurers.</li><li>We then ask how much money, lent at <span class="dash-skeleton" data-draw="rate" data-source="latest" data-field="rate" data-row="0">—</span>% a year, would earn that much in interest. We call that sum the payout value.</li><li>The rate is what highly rated companies pay on 20-year bonds, which are loans from investors. The US Treasury publishes it monthly, and we use each month’s rate from the start of the next month.</li><li>We compare the payout value with the value of all US company stock, from the Federal Reserve. Speculation is the stock value minus the payout value.</li><li>We use each Federal Reserve figure only from 75 days after its quarter ends, about when it comes out. So each past reading uses only numbers that were public at the time. Between releases, daily moves in the S&amp;P 500 stock index update the stock value. Dividends from a fund that tracks that index update the dividend total.</li></ol>
+        <p>We wanted a rate set by the market, not a fixed number, that we are free to publish. This one moves almost exactly like a Moody’s rate on company bonds, which we used before. We can’t publish Moody’s rate, but we can publish the Treasury’s.</p>
+        <p>The idea comes from Karl Marx. He called stocks “fictitious capital,” because they are claims on future income. He wrote that their market value “is in part speculative.” It is determined “not only by the actual income, but also by the anticipated income.” (Capital, Volume III, chapter 29.)</p>
+        <p>Our data comes from the US Federal Reserve, the US Treasury and Yahoo Finance. The data file and our code are linked at the bottom of this page.</p>
+      </div>
+    </details>
+
+    <details id="limits">
+      <summary>What it can’t tell you</summary>
+      <div class="sg-body">
+        <ul><li>It can’t tell you when stock prices will fall, or by how much. The longest earlier stretch with speculation above half the value ran from <span class="dash-skeleton" data-draw="run_start" data-source="context" data-field="run_start" data-row="0">—</span>, to <span class="dash-skeleton" data-draw="run_end" data-source="context" data-field="run_end" data-row="0">—</span>.</li><li>Some speculation is normal. Prices usually include what buyers expect companies to pay in the future.</li><li>When companies raise more by selling new shares than they spend buying back shares, payouts shrink. Speculation then looks bigger.</li><li>The answer depends on how we count buybacks. If we average them over 3 years instead of 1, speculation is <span class="dash-skeleton" data-draw="share_3y" data-source="latest" data-field="speculation_share_3y" data-row="0">—</span>% of the value today.</li><li>The interest rate changes every month. A higher rate means a lower payout value and more speculation, even if nothing else changes.</li><li>The Federal Reserve updates its past numbers every 3 months. When it does, our past numbers change too.</li></ul>
+      </div>
+    </details>
+
+    <details id="updates">
+      <summary>Updates and changes</summary>
+      <div class="sg-body">
+        <ul><li>We update the numbers every weekday at about 1:30 p.m. US Eastern time, using the last market close.</li><li>November 22, 2026: We now use the US Treasury’s rate on 20-year bonds from highly rated companies. It moves almost exactly like the Moody’s rate we used before, and we can share it. The data now starts in February 1984, as far back as the new rate allows. With the new rate, speculation is <span class="dash-skeleton" data-draw="share" data-source="latest" data-field="speculation_share" data-row="0">—</span>% of the value today. Amounts are now in US dollars for all US company stock, not S&amp;P 500 points.</li></ul>
+      </div>
+    </details>
+  </div>
+
+  <footer>
+    <p class="sg-foot">This page describes the market. It does not predict prices or tell you what to buy or sell.</p>
+  </footer>
+</main>
+
+<script>
+  dash.loader('daily', {
+    description: 'Turns the file\'s list of column names and rows of values into one record per trading day.',
+    fn: ({answer}) => {
+      const columns = answer.columns;
+      const data = answer.data.map((values) => Object.fromEntries(columns.map((name, i) => [name, values[i]])));
+      return {data, columns, meta: answer.meta};
+    },
+  });
+
+  dash.calc('latest', {
+    title: 'Latest trading day',
+    description: 'Stock price, the part backed by cash, and speculation on the latest trading day.',
+    inputs: ['daily'],
+    fn: (daily) => {
+      const r = daily[daily.length - 1];
+      if (!r) return [];
+      return [{
+        date: r.trading_day_date,
+        price: Math.round(10 * r.us_equity_market_value_amount) / 10,
+        cash_backed: Math.round(10 * r.us_equity_12m_buyback_capitalized_value_amount) / 10,
+        speculation: Math.round(10 * r.us_equity_12m_buyback_speculative_component_amount) / 10,
+        speculation_share: Math.round(r.us_equity_12m_buyback_speculative_component_percent),
+        speculation_share_3y: Math.round(100 * (1 - r.us_equity_36m_buyback_capitalized_value_amount / r.us_equity_market_value_amount)),
+        times: Math.round(r.us_equity_12m_buyback_market_to_capitalized_value_percent / 10) / 10,
+        rate: r.hqm_20y_corporate_bond_spot_rate,
+      }];
+    },
+  });
+
+  dash.calc('context', {
+    title: 'Compared with every trading day',
+    description: 'Where the latest day stands against all trading days in the data.',
+    inputs: ['daily'],
+    fn: (daily) => {
+      if (!daily.length) return [];
+      const share = (r) => r.us_equity_12m_buyback_speculative_component_percent;
+      const last = daily[daily.length - 1];
+      const smaller = daily.filter((r) => share(r) < share(last)).length;
+      //longest earlier stretch with speculation above half of the price, not counting one still going
+      let best = null, start = null;
+      for (let i = 0; i < daily.length; i++) {
+        const on = share(daily[i]) > 50;
+        if (on && start === null) start = i;
+        if ((!on || i === daily.length - 1) && start !== null) {
+          const end = on ? i : i - 1;
+          if (!(on && i === daily.length - 1) && (!best || end - start > best[1] - best[0])) best = [start, end];
+          start = null;
+        }
+      }
+      return [{
+        first_year: Number(daily[0].trading_day_date.slice(0, 4)),
+        rank: Math.round(100 * smaller / daily.length),
+        median_share: Math.round(d3.median(daily, share)),
+        median_times: Math.round(d3.median(daily, (r) => r.us_equity_12m_buyback_market_to_capitalized_value_percent) / 10) / 10,
+        run_start: best ? daily[best[0]].trading_day_date : null,
+        run_end: best ? daily[best[1]].trading_day_date : null,
+      }];
+    },
+  });
+
+  dash.calc('yearly', {
+    title: 'Year by year',
+    description: 'The last trading day of each year, and the latest trading day.',
+    inputs: ['daily'],
+    fn: (daily) => {
+      const out = [];
+      for (let i = 0; i < daily.length; i++) {
+        const r = daily[i], next = daily[i + 1];
+        if (next && next.trading_day_date.slice(0, 4) === r.trading_day_date.slice(0, 4)) continue;
+        out.push({
+          date: r.trading_day_date,
+          price: Math.round(10 * r.us_equity_market_value_amount) / 10,
+          cash_backed: Math.round(10 * r.us_equity_12m_buyback_capitalized_value_amount) / 10,
+          speculation: Math.round(10 * r.us_equity_12m_buyback_speculative_component_amount) / 10,
+          speculation_share: Math.round(r.us_equity_12m_buyback_speculative_component_percent),
+          times: Math.round(r.us_equity_12m_buyback_market_to_capitalized_value_percent / 10) / 10,
+        });
+      }
+      return out.reverse();
+    },
+  });
+</script>
+
+<script>
+  window.sgFmt = {
+    int: d3.format(',.0f'),
+    px: d3.format(',.2f'),
+    one: d3.format('.1f'),
+    money: (v) => (v < 0 ? '−$' : '$') + d3.format(',.1f')(Math.abs(v)) + ' trillion',
+    axisMoney: (v) => (v < 0 ? '−$' : '$') + d3.format(',~g')(Math.abs(v)) + 'T',
+    shortMoney: (v) => (v < 0 ? '−$' : '$') + d3.format(',.0f')(Math.abs(v)) + 'T',
+    day: d3.utcFormat('%B %-d, %Y'),
+    parse: d3.utcParse('%Y-%m-%d'),
+  };
+  window.sgRange = 25;
+  window.sgScale = 'log';
+  window.sgFill = (text, values) => text.replace(/\{(\w+)\}/g, (m, k) => (k in values ? values[k] : m));
+  window.sgCopy = /*COPY*/{"status_loading": "Loading the latest numbers…", "status_ok": "Numbers from the market close on {date}. We update them every weekday.", "status_error": "The numbers didn’t load. Refresh the page to try again.", "status_empty": "No numbers to show yet. Check back after the next weekday update.", "chart_error": "This chart didn’t load. Refresh the page to try again.", "chart1_label_price": "Stock value", "chart1_label_cash": "Payout value", "chart1_label_spec": "Speculation", "tip_price": "Stock value", "tip_cash": "Payout value", "tip_spec": "Speculation", "tip_share": "Speculation, percent of value", "tip_times": "Times payout value", "chart1_aria": "Line chart from {start}, to {end}. The value of US company stock went from {p0} to {p1}. The payout value went from {c0} to {c1}. The shaded gap between them is speculation.", "chart2_aria": "Line chart from {start}, to {end}. Stock value was {t0} times the payout value at the start and {t1} times at the end. At 1, there is no speculation.", "chart2_end": "{x} times", "chart2_ref_one": "No speculation", "chart2_ref_typical": "Typical: {x} times", "date_range": "{start}, to {end}"}/*END COPY*/;
+  window.sgRows = function () {
+    const d = dash.data('daily');
+    if (d.status !== 'ok' || !Array.isArray(d.data)) return null;
+    if (window.sgCache && window.sgCache.src === d.data) return window.sgCache.rows;
+    const rows = d.data.map((r) => ({...r, t: window.sgFmt.parse(r.trading_day_date)})).filter((r) => r.t);
+    window.sgCache = {src: d.data, rows};
+    return rows;
+  };
+  window.sgVisible = function (rows) {
+    if (!window.sgRange || !rows.length) return rows;
+    const start = d3.utcYear.offset(rows[rows.length - 1].t, -window.sgRange);
+    return rows.filter((r) => r.t >= start);
+  };
+  window.sgFail = function (el, id) {
+    const s = dash.data(id).status;
+    el.classList.toggle('dash-skeleton', s === 'loading');
+    if (s === 'error') {
+      const p = document.createElement('p');
+      p.className = 'sg-fail';
+      p.textContent = window.sgCopy.chart_error;
+      el.replaceChildren(p);
+    } else {
+      el.replaceChildren();
+    }
+  };
+
+  //numbers and dates in the text and boxes
+  const day = (v) => (v ? window.sgFmt.day(window.sgFmt.parse(v)) : '—');
+  const int = (v) => (v == null ? '—' : window.sgFmt.int(v));
+  const figures = {
+    'date': ['latest', 'date', day],
+    'price': ['latest', 'price', (v) => window.sgFmt.money(v)],
+    'cash': ['latest', 'cash_backed', (v) => window.sgFmt.money(v)],
+    'spec': ['latest', 'speculation', (v) => window.sgFmt.money(v)],
+    'share': ['latest', 'speculation_share', int],
+    'share_3y': ['latest', 'speculation_share_3y', int],
+    'times': ['latest', 'times', (v) => window.sgFmt.one(v)],
+    'rate': ['latest', 'rate', (v) => d3.format('.2f')(v)],
+    'rank': ['context', 'rank', int],
+    'first_year': ['context', 'first_year', String],
+    'median': ['context', 'median_share', int],
+    'run_start': ['context', 'run_start', day],
+    'run_end': ['context', 'run_end', day],
+  };
+  for (const [name, [source, field, fmt]] of Object.entries(figures)) {
+    dash.draw(name, (el) => {
+      const d = dash.data(source);
+      const row = d.status === 'ok' && d.data && d.data[0];
+      el.classList.toggle('dash-skeleton', d.status === 'loading');
+      el.textContent = row && row[field] != null ? fmt(row[field]) : '—';
+    });
+  }
+  //tells the reader whether the numbers are loading, current or missing
+  dash.draw('status', (el) => {
+    const d = dash.data('daily');
+    const rows = window.sgRows();
+    el.classList.toggle('is-loading', d.status === 'loading');
+    el.classList.toggle('is-error', d.status === 'error');
+    el.classList.remove('dash-skeleton');
+    const c = window.sgCopy;
+    if (d.status === 'loading') el.textContent = c.status_loading;
+    else if (d.status === 'error') el.textContent = c.status_error;
+    else if (rows && rows.length) el.textContent = window.sgFill(c.status_ok, {date: window.sgFmt.day(rows[rows.length - 1].t)});
+    else el.textContent = c.status_empty;
+  });
+  //the dates each chart covers, for the period chosen
+  for (const name of ['dates']) {
+    dash.draw(name, (el) => {
+      const all = window.sgRows();
+      const rows = all ? window.sgVisible(all) : [];
+      el.classList.toggle('dash-skeleton', dash.data('daily').status === 'loading');
+      el.textContent = rows.length ? window.sgFill(window.sgCopy.date_range, {start: window.sgFmt.day(rows[0].t), end: window.sgFmt.day(rows[rows.length - 1].t)}) : '—';
+    });
+  }
+  dash.draw('yearly-body', (el) => {
+    const d = dash.data('yearly');
+    if (d.status !== 'ok') { el.replaceChildren(); return; }
+    const f = window.sgFmt;
+    el.replaceChildren(...d.data.map((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.date;
+      for (const text of [day(r.date), f.one(r.price), f.one(r.cash_backed), f.one(r.speculation), f.int(r.speculation_share), f.one(r.times)]) {
+        const td = document.createElement('td');
+        td.textContent = text;
+        tr.append(td);
+      }
+      return tr;
+    }));
+  });
+
+  for (const b of document.querySelectorAll('.sg-scale button')) {
+    b.addEventListener('click', () => {
+      window.sgScale = b.dataset.scale;
+      for (const o of document.querySelectorAll('.sg-scale button')) o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+      for (const h of document.querySelectorAll('#scale-help-log')) h.hidden = window.sgScale !== 'log';
+      for (const h of document.querySelectorAll('#scale-help-linear')) h.hidden = window.sgScale !== 'linear';
+      dash.draw('price-chart');
+    });
+  }
+  for (const b of document.querySelectorAll('.sg-range:not(.sg-scale) button')) {
+    b.addEventListener('click', () => {
+      window.sgRange = +b.dataset.years;
+      for (const o of document.querySelectorAll('.sg-range:not(.sg-scale) button')) o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+      for (const name of ['price-chart', 'times-chart', 'dates']) dash.draw(name);
+    });
+  }
+</script>
+
+<script>
+  //chart frame: axes, labels at the line ends, crosshair, tooltip and keyboard reading
+  window.sgChart = function (el, cfg) {
+    const rows = window.sgVisible(cfg.rows);
+    const W = Math.max(280, el.clientWidth || 600);
+    const H = Math.round(Math.max(264, Math.min(424, W * 0.55)));
+    const f = window.sgFmt;
+    el.classList.remove('dash-skeleton');
+    el.replaceChildren();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('role', 'img').attr('aria-label', cfg.label(rows));
+    const live = d3.select(el).append('div').attr('class', 'sg-sr').attr('aria-live', 'polite');
+    const measure = (texts, kind) => {
+      const probe = svg.append('g').attr('class', kind === 'tick' ? 'tick' : null);
+      let w = 0;
+      for (const t of texts) {
+        const n = probe.append('text').attr('class', kind === 'tick' ? null : kind).text(t);
+        w = Math.max(w, n.node().getComputedTextLength());
+      }
+      probe.remove();
+      return Math.ceil(w);
+    };
+    const y = cfg.y(rows);
+    const tickVals = cfg.yTicks ? cfg.yTicks(y) : y.ticks(5);
+    const narrow = W < 520;
+    const endLabels = cfg.ends(rows[rows.length - 1]);
+    const lines = (e) => (narrow ? [e.name, e.number] : [`${e.name} ${e.number}`]).filter((t) => t.trim());
+    const right = Math.min(W * 0.32, measure(endLabels.flatMap(lines), 'sg-end') + 24);
+    const m = {top: 16, right, bottom: 32, left: measure(tickVals.map(cfg.yFmt), 'tick') + 16};
+    y.range([H - m.bottom, m.top]);
+    const x = d3.scaleUtc().domain(d3.extent(rows, (r) => r.t)).range([m.left, W - m.right]);
+    svg.append('g').attr('transform', `translate(0,${H - m.bottom})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - m.left - m.right) / 96))).tickSizeOuter(0));
+    svg.append('g').attr('transform', `translate(${m.left},0)`)
+      .call(d3.axisLeft(y).tickValues(tickVals).tickFormat(cfg.yFmt).tickSize(-(W - m.left - m.right)))
+      .call((g) => g.select('.domain').remove());
+    cfg.draw(svg.append('g'), x, y, rows, {W, H, m});
+
+    //labels at the right end: a short colored key, then words in the text color
+    const placed = endLabels.map((e) => ({...e, py: y(e.value)})).sort((a, b) => a.py - b.py);
+    const gap = narrow ? 32 : 16;
+    for (let i = 1; i < placed.length; i++) placed[i].py = Math.max(placed[i].py, placed[i - 1].py + gap);
+    for (const e of placed) {
+      const ls = lines(e);
+      const top = e.py - (ls.length - 1) * 7;
+      svg.append('rect').attr('x', W - m.right + 6).attr('y', top - (e.area ? 5 : 1)).attr('width', 10).attr('height', e.area ? 10 : 3)
+        .style('fill', e.color).style('opacity', e.area ? 0.35 : 1);
+      const t = svg.append('text').attr('class', 'sg-end').attr('y', top);
+      ls.forEach((line, k) => t.append('tspan').attr('x', W - m.right + 20).attr('dy', k ? '1.2em' : '0.35em').text(line));
+    }
+
+    const hover = svg.append('g').attr('class', 'sg-hover').style('display', 'none');
+    hover.append('line').attr('y1', m.top).attr('y2', H - m.bottom).style('stroke', 'var(--color-fg-muted)').style('stroke-dasharray', '3,3');
+    const dots = cfg.series.map((s) => hover.append('circle').attr('r', 4).style('fill', s.color).style('stroke', 'var(--color-bg)').style('stroke-width', 2));
+    const tip = d3.select(el).append('div').attr('class', 'sg-tip').style('display', 'none');
+    const bis = d3.bisector((r) => r.t).center;
+    let current = null;
+    const showIndex = (i, announce) => {
+      const r = rows[i];
+      if (!r) return;
+      current = i;
+      const cx = x(r.t);
+      hover.style('display', null);
+      hover.select('line').attr('x1', cx).attr('x2', cx);
+      cfg.series.forEach((s, k) => dots[k].attr('cx', cx).attr('cy', y(s.value(r))));
+      tip.style('display', null);
+      tip.selectAll('*').remove();
+      tip.append('strong').text(f.day(r.t));
+      const items = cfg.tip(r);
+      for (const [k, v] of items) { const row = tip.append('div'); row.append('span').text(k); row.append('span').text(v); }
+      const tw = tip.node().offsetWidth;
+      tip.style('left', `${Math.max(0, cx + 16 + tw > W ? cx - 16 - tw : cx + 16)}px`).style('top', `${m.top}px`);
+      if (announce) live.text(`${f.day(r.t)}. ${items.map(([k, v]) => `${k}: ${v}`).join('. ')}.`);
+    };
+    const hide = () => { hover.style('display', 'none'); tip.style('display', 'none'); };
+    const fromPointer = (ev) => {
+      const [px] = d3.pointer(ev, svg.node());
+      showIndex(bis(rows, x.invert(Math.max(m.left, Math.min(W - m.right, px)))), false);
+    };
+    svg.append('rect').attr('x', m.left).attr('y', m.top).attr('width', W - m.left - m.right).attr('height', H - m.top - m.bottom)
+      .style('fill', 'transparent').style('cursor', 'crosshair')
+      .on('pointerdown', fromPointer).on('pointermove', fromPointer)
+      .on('pointerleave', (ev) => { if (ev.pointerType === 'mouse') hide(); });
+    el.onkeydown = (ev) => {
+      const steps = {ArrowLeft: -1, ArrowRight: 1, PageUp: -21, PageDown: 21};
+      let i = current === null ? rows.length - 1 : current;
+      if (ev.key in steps) i += steps[ev.key] * (ev.shiftKey ? 12 : 1);
+      else if (ev.key === 'Home') i = 0;
+      else if (ev.key === 'End') i = rows.length - 1;
+      else if (ev.key === 'Escape') { hide(); current = null; return; }
+      else return;
+      ev.preventDefault();
+      showIndex(Math.max(0, Math.min(rows.length - 1, i)), true);
+    };
+    el.onblur = () => { if (current !== null) hide(); };
+  };
+
+  //a tap or click outside the charts hides their readings
+  document.addEventListener('pointerdown', (ev) => {
+    if (ev.target && ev.target.closest && ev.target.closest('.sg-chart')) return;
+    for (const t of document.querySelectorAll('.sg-chart .sg-tip, .sg-chart .sg-hover')) t.style.display = 'none';
+  });
+
+  dash.draw('price-chart', (el) => {
+    const all = window.sgRows();
+    if (!all || !all.length) return window.sgFail(el, 'daily');
+    const f = window.sgFmt;
+    const cPrice = 'var(--color-fg)', cCash = dash.colors[0], cSpec = dash.colors[1];
+    const c = window.sgCopy;
+    const log = window.sgScale === 'log' && all.every((r) => r.us_equity_12m_buyback_capitalized_value_amount > 0);
+    const price = (r) => r.us_equity_market_value_amount;
+    const cash = (r) => r.us_equity_12m_buyback_capitalized_value_amount;
+    window.sgChart(el, {
+      rows: all,
+      label: (rows) => {
+        const a = rows[0], b = rows[rows.length - 1];
+        return window.sgFill(c.chart1_aria, {start: f.day(a.t), end: f.day(b.t), p0: f.money(price(a)), p1: f.money(price(b)), c0: f.money(cash(a)), c1: f.money(cash(b))});
+      },
+      y: (rows) => {
+        const hi = d3.max(rows, (r) => Math.max(price(r), cash(r)));
+        const lo = d3.min(rows, (r) => Math.min(price(r), cash(r)));
+        if (log) return d3.scaleLog().domain([lo * 0.9, hi * 1.08]);
+        return d3.scaleLinear().domain([0, hi * 1.05]).nice();
+      },
+      yTicks: log ? (y) => {
+        const [a, b] = y.domain();
+        const steps = [1, 2, 5];
+        const out = [];
+        for (let p = Math.floor(Math.log10(a)); p <= Math.ceil(Math.log10(b)); p++) {
+          for (const k of steps) { const v = k * Math.pow(10, p); if (v >= a && v <= b) out.push(v); }
+        }
+        return out.length >= 3 ? out : y.ticks(4);
+      } : null,
+      yFmt: (v) => f.axisMoney(v),
+      ends: (r) => [
+        {value: price(r), name: c.chart1_label_price, number: f.shortMoney(price(r)), color: cPrice},
+        {value: log ? Math.sqrt(price(r) * cash(r)) : (price(r) + cash(r)) / 2, name: c.chart1_label_spec, number: f.shortMoney(price(r) - cash(r)), color: cSpec, area: true},
+        {value: cash(r), name: c.chart1_label_cash, number: f.shortMoney(cash(r)), color: cCash},
+      ],
+      series: [{color: cPrice, value: price}, {color: cCash, value: cash}],
+      draw: (g, x, y, rows) => {
+        g.append('path').datum(rows).style('fill', cSpec).style('opacity', 0.35)
+          .attr('d', d3.area().x((r) => x(r.t)).y0((r) => y(cash(r))).y1((r) => y(price(r))));
+        g.append('path').datum(rows).style('fill', 'none').style('stroke', cCash).style('stroke-width', 2)
+          .attr('d', d3.line().x((r) => x(r.t)).y((r) => y(cash(r))));
+        g.append('path').datum(rows).style('fill', 'none').style('stroke', cPrice).style('stroke-width', 2)
+          .attr('d', d3.line().x((r) => x(r.t)).y((r) => y(price(r))));
+      },
+      tip: (r) => [
+        [c.tip_price, f.money(price(r))],
+        [c.tip_cash, f.money(cash(r))],
+        [c.tip_spec, f.money(price(r) - cash(r))],
+        [c.tip_share, `${f.int(r.us_equity_12m_buyback_speculative_component_percent)}%`],
+      ],
+    });
+  });
+
+  dash.draw('times-chart', (el) => {
+    const all = window.sgRows();
+    if (!all || !all.length) return window.sgFail(el, 'daily');
+    const st = dash.data('context');
+    const typical = st.status === 'ok' && st.data && st.data[0] ? st.data[0].median_times : null;
+    const f = window.sgFmt;
+    const c0 = dash.colors[0];
+    const times = (r) => r.us_equity_12m_buyback_market_to_capitalized_value_percent / 100;
+    const c = window.sgCopy;
+    window.sgChart(el, {
+      rows: all,
+      label: (rows) => {
+        const a = rows[0], b = rows[rows.length - 1];
+        return window.sgFill(c.chart2_aria, {start: f.day(a.t), end: f.day(b.t), t0: f.one(times(a)), t1: f.one(times(b))});
+      },
+      y: (rows) => d3.scaleLinear().domain([0, Math.max(d3.max(rows, times), 1.2) * 1.08]).nice(),
+      yFmt: (v) => `${f.one(v)}×`,
+      ends: (r) => [{value: times(r), name: '', number: window.sgFill(c.chart2_end, {x: f.one(times(r))}), color: c0}],
+      series: [{color: c0, value: times}],
+      draw: (g, x, y, rows, {W, m}) => {
+        const ref = (v, text, below) => {
+          if (v == null || v > y.domain()[1]) return;
+          g.append('line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', y(v)).attr('y2', y(v))
+            .style('stroke', 'var(--color-fg-muted)').style('stroke-dasharray', '4,4');
+          g.append('text').attr('class', 'sg-note').attr('x', m.left + 8).attr('y', below ? y(v) + 16 : y(v) - 6).text(text)
+            .style('paint-order', 'stroke').style('stroke', 'var(--color-bg)').style('stroke-width', 4).style('stroke-linejoin', 'round');
+        };
+        g.append('path').datum(rows).style('fill', 'none').style('stroke', c0).style('stroke-width', 2)
+          .attr('d', d3.line().x((r) => x(r.t)).y((r) => y(times(r))));
+        ref(1, c.chart2_ref_one, true);
+        if (typical != null && Math.abs(y(typical) - y(1)) > 16) ref(typical, window.sgFill(c.chart2_ref_typical, {x: f.one(typical)}));
+      },
+      tip: (r) => [
+        [c.tip_times, f.one(times(r))],
+        [c.tip_price, f.money(r.us_equity_market_value_amount)],
+        [c.tip_share, `${f.int(r.us_equity_12m_buyback_speculative_component_percent)}%`],
+      ],
+    });
+  });
+</script>
+
+</div>
+<footer class="sg-site-foot">
+  <p>Data: <a href="data.json">data.json</a>, updated every weekday. Code: <a href="https://github.com/neillinehan/NeilLinehanPortfolio/tree/main/speculation-gauge">GitHub</a>. Sources: US Federal Reserve, US Treasury, Yahoo Finance.</p>
+</footer>
+</body>
+</html>
