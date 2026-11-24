@@ -20,7 +20,7 @@ Live page: https://neillinehan.github.io/NeilLinehanPortfolio/speculation-gauge/
 
 ## Updating
 
-`.github/workflows/speculation-gauge.yml` runs `compute.py` every weekday at about 1:30 p.m. US Eastern time and publishes the site to GitHub Pages. To run it by hand: **Actions → Speculation gauge → Run workflow**.
+`.github/workflows/speculation-gauge.yml` runs `compute.py` every weekday at about 5:15 p.m. US Eastern time, after the market closes, with backup runs that evening and the next morning in case GitHub skips one, and publishes the site to GitHub Pages. To run it by hand: **Actions → Speculation gauge → Run workflow**.
 
 To build the data locally:
 
