@@ -3,12 +3,10 @@ name: Speculation gauge
 # Recomputes the gauge's data every weekday and publishes the repository
 # (including speculation-gauge/) to GitHub Pages.
 on:
-  # GitHub sometimes delays or drops scheduled runs, so there are two
-  # backups. Each run rebuilds the same data, so extra runs are harmless.
+  # After the close, so each run includes that day's close. GitHub can
+  # start scheduled runs hours late; the day's numbers are still in.
   schedule:
-    - cron: '17 22 * * 1-5'   # 5:17 p.m. US Eastern (standard time), after the close
-    - cron: '43 1 * * 2-6'    # 8:43 p.m. US Eastern, backup
-    - cron: '11 13 * * 2-6'   # 8:11 a.m. US Eastern next morning, backup
+    - cron: '17 22 * * 1-5'   # 5:17 p.m. US Eastern (standard time)
   workflow_dispatch:
   push:
     branches: [main]
