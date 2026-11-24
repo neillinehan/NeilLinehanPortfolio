@@ -3,8 +3,10 @@ name: Speculation gauge
 # Recomputes the gauge's data every weekday and publishes the repository
 # (including speculation-gauge/) to GitHub Pages.
 on:
+  # After the close, so each run includes that day's close. GitHub can
+  # start scheduled runs hours late; the day's numbers are still in.
   schedule:
-    - cron: '23 18 * * 1-5'   # 18:23 UTC = 1:23 p.m. US Eastern (standard time)
+    - cron: '17 22 * * 1-5'   # 5:17 p.m. US Eastern (standard time)
   workflow_dispatch:
   push:
     branches: [main]
